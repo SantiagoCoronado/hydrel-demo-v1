@@ -1,0 +1,232 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
+  --color-sub: var(--sub);
+  --color-line: var(--line);
+  --color-line-hi: var(--line-hi);
+  --color-fg: var(--fg);
+  --color-fg-2: var(--fg-2);
+  --color-fg-3: var(--fg-3);
+  --color-brand: var(--brand);
+  --color-accent: var(--accent);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-err: var(--err);
+  --radius: var(--radius);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+}
+
+/* ───────── Helios · dark ───────── */
+:root[data-theme='helios'][data-mode='dark'] {
+  --bg: #070b13;
+  --panel: #0e1422;
+  --sub: #0a1019;
+  --line: rgba(120, 160, 210, 0.1);
+  --line-hi: rgba(120, 160, 210, 0.2);
+  --fg: #e8eef6;
+  --fg-2: #8b9cb5;
+  --fg-3: #5a6a82;
+  --brand: #3a9dff;
+  --accent: #42c8ff;
+  --glow: #42c8ff;
+  --ok: #24d39a;
+  --warn: #f5a524;
+  --err: #ff5560;
+  --radius: 8px;
+  --font-sans: 'Inter Tight', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+/* ───────── Helios · light ───────── */
+:root[data-theme='helios'][data-mode='light'] {
+  --bg: #fafbfc;
+  --panel: #ffffff;
+  --sub: #f2f4f7;
+  --line: #e3e7ec;
+  --line-hi: #0c1320;
+  --fg: #0c1320;
+  --fg-2: #48566b;
+  --fg-3: #8693a8;
+  --brand: #0561e5;
+  --accent: #0561e5;
+  --glow: transparent;
+  --ok: #0f9d6a;
+  --warn: #d97706;
+  --err: #dc2626;
+  --radius: 8px;
+  --font-sans: 'Inter Tight', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+/* ───────── Instrument · dark ───────── */
+:root[data-theme='instrument'][data-mode='dark'] {
+  --bg: #15140f;
+  --panel: #1d1c16;
+  --sub: #17160f;
+  --line: #2d2c24;
+  --line-hi: #4a4838;
+  --fg: #ebe6da;
+  --fg-2: #9b9588;
+  --fg-3: #67635a;
+  --brand: #ebe6da;
+  --accent: #e7a23b;
+  --glow: transparent;
+  --ok: #7fbe5d;
+  --warn: #e7a23b;
+  --err: #e36161;
+  --radius: 2px;
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+/* ───────── Instrument · light ───────── */
+:root[data-theme='instrument'][data-mode='light'] {
+  --bg: #f1ede4;
+  --panel: #faf7ef;
+  --sub: #ebe6da;
+  --line: #c9c2b1;
+  --line-hi: #1a1a17;
+  --fg: #1a1a17;
+  --fg-2: #54524a;
+  --fg-3: #857f70;
+  --brand: #1a1a17;
+  --accent: #b56b14;
+  --glow: transparent;
+  --ok: #3d7a2b;
+  --warn: #b56b14;
+  --err: #a51d1d;
+  --radius: 2px;
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+body {
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+html[data-theme='instrument'] body {
+  font-family: var(--font-mono);
+}
+
+.num,
+[data-num] {
+  font-variant-numeric: tabular-nums;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-hi) transparent;
+}
+
+/* React Flow overrides */
+.react-flow__node {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  width: auto !important;
+}
+.react-flow__node.selected {
+  box-shadow: none !important;
+}
+.react-flow__handle {
+  opacity: 0;
+  pointer-events: none;
+  width: 1px !important;
+  height: 1px !important;
+  min-width: 1px !important;
+  min-height: 1px !important;
+  border: none !important;
+  background: transparent !important;
+}
+.react-flow__edge-path {
+  stroke: var(--fg);
+  fill: none;
+}
+.react-flow__background {
+  background: var(--bg);
+}
+.react-flow__controls {
+  background: var(--panel) !important;
+  border: 1px solid var(--line) !important;
+}
+.react-flow__controls-button {
+  background: var(--panel) !important;
+  color: var(--fg) !important;
+  border-bottom: 1px solid var(--line) !important;
+}
+.react-flow__minimap {
+  background: var(--panel) !important;
+  border: 1px solid var(--line) !important;
+}
+.react-flow__minimap-mask {
+  fill: color-mix(in oklch, var(--bg) 60%, transparent);
+}
+.react-flow__attribution {
+  background: transparent !important;
+  font-size: 9px !important;
+  color: var(--fg-3) !important;
+}
+
+/* Helios-only animations */
+@keyframes marching-ants {
+  to {
+    stroke-dashoffset: -100;
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    text-shadow:
+      0 0 12px color-mix(in oklch, var(--warn) 25%, transparent),
+      0 0 0 transparent;
+  }
+  50% {
+    text-shadow:
+      0 0 28px color-mix(in oklch, var(--warn) 55%, transparent),
+      0 0 14px color-mix(in oklch, var(--warn) 30%, transparent);
+  }
+}
+
+@keyframes dot-pulse {
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+html[data-theme='helios'] .ants {
+  animation: marching-ants 1.4s linear infinite;
+}
+
+html[data-theme='helios'][data-mode='dark'] .pulse-glow {
+  animation: pulse-glow 4s ease-in-out infinite;
+}
+
+html[data-theme='helios'] .live-dot {
+  animation: dot-pulse 1.8s ease-in-out infinite;
+}
+
+html[data-theme='instrument'] .ants,
+html[data-theme='instrument'] .pulse-glow,
+html[data-theme='instrument'] .live-dot {
+  animation: none !important;
+}
