@@ -2,7 +2,27 @@
 // Used by PlantBuilder (palette + SLD) and LiveOperations (asset list).
 
 export type AssetStatus = 'ok' | 'warn' | 'idle' | 'sel';
-export type AssetKind = 'PV' | 'WT' | 'BAT' | 'DG' | 'L' | 'EV' | 'G' | 'CHP' | 'TES' | 'H2' | 'HVAC' | 'X' | 'BRK' | 'BUS';
+export type AssetKind =
+  | 'PV'
+  | 'WT'
+  | 'BAT'
+  | 'DG'
+  | 'L'
+  | 'EV'
+  | 'G'
+  | 'CHP'
+  | 'TES'
+  | 'H2'
+  | 'HVAC'
+  | 'X'
+  | 'BRK'
+  | 'BUS'
+  | 'ELEC'
+  | 'FC'
+  | 'METH'
+  | 'H2T'
+  | 'CO2C'
+  | 'HP';
 
 export interface PaletteItem {
   code: AssetKind;
@@ -11,7 +31,7 @@ export interface PaletteItem {
 }
 
 export interface PaletteCategory {
-  name: 'GENERATION' | 'STORAGE' | 'LOAD' | 'BALANCE';
+  name: 'GENERATION' | 'STORAGE' | 'LOAD' | 'BALANCE' | 'H2 + CARBON';
   items: PaletteItem[];
 }
 
@@ -39,6 +59,17 @@ export const PALETTE: PaletteCategory[] = [
       { code: 'L', label: 'Building load' },
       { code: 'EV', label: 'EV charging' },
       { code: 'HVAC', label: 'HVAC plant' },
+    ],
+  },
+  {
+    name: 'H2 + CARBON',
+    items: [
+      { code: 'FC', label: 'Fuel cell', highlight: true },
+      { code: 'ELEC', label: 'Electrolyzer' },
+      { code: 'H2T', label: 'H₂ tank' },
+      { code: 'METH', label: 'Methanation' },
+      { code: 'CO2C', label: 'CO₂ capture' },
+      { code: 'HP', label: 'Heat pump' },
     ],
   },
   {
@@ -239,6 +270,99 @@ export const SOURCES: Asset[] = [
       { ts: '00:00', text: 'Auto-test pass · 8.4 min', kind: 'ok' },
     ],
   },
+  {
+    id: 'FC-01',
+    code: 'FC',
+    name: 'FC-01',
+    description: 'PEM fuel cell · 5.0 MW · η 92%',
+    position: { x: 192, y: 480 },
+    side: 'source',
+    status: 'ok',
+    flow: { value: 4.8, label: '4.80 MW · GEN' },
+    pillLong: '● GENERATING',
+    pillShort: '● GEN',
+    pillKind: 'ok',
+    tags: [
+      { key: 'TYPE', value: 'PEM stack' },
+      { key: 'RATED', value: '5.00 MW' },
+      { key: 'EFF', value: '92.0 %' },
+      { key: 'STACK V', value: '720 VDC' },
+      { key: 'H2 IN', value: '32 kg/h' },
+      { key: 'STACK T', value: '78 °C' },
+    ],
+    readouts: [
+      { label: 'POWER', value: '4.80 MW', color: 'ok' },
+      { label: 'EFFICIENCY', value: '92.0%' },
+      { label: 'H2 USE', value: '32 kg/h' },
+      { label: 'TEMP', value: '78 °C' },
+    ],
+    sparkline: [4.0, 4.2, 4.4, 4.6, 4.8, 4.85, 4.8, 4.7, 4.6, 4.5, 4.6, 4.7, 4.8, 4.9, 4.85, 4.8],
+    events: [
+      { ts: '02:14', text: 'Stack temp nominal · ramp to 4.8 MW', kind: 'ok' },
+      { ts: '01:42', text: 'H₂ supply switched to ELEC-01 buffer', kind: 'op' },
+      { ts: '00:18', text: 'Membrane health pass · 99.1%', kind: 'ok' },
+    ],
+  },
+];
+
+export const H2_STACK: Asset[] = [
+  {
+    id: 'ELEC-01',
+    code: 'ELEC',
+    name: 'ELEC-01',
+    description: 'PEM electrolyzer · 2.0 MW · 32 kg/h H₂',
+    position: { x: 768, y: 480 },
+    side: 'load',
+    status: 'ok',
+    flow: { value: 1.6, label: '1.60 MW' },
+    pillLong: '● PRODUCING',
+    pillShort: '● PROD',
+    pillKind: 'ok',
+    tags: [
+      { key: 'TYPE', value: 'PEM electrolyzer' },
+      { key: 'RATED', value: '2.00 MW' },
+      { key: 'PROD', value: '32 kg/h H₂' },
+      { key: 'PRESSURE', value: '30 bar' },
+      { key: 'SEC', value: '52 kWh/kg' },
+    ],
+    readouts: [
+      { label: 'POWER', value: '1.60 MW' },
+      { label: 'H2 OUT', value: '32 kg/h' },
+      { label: 'SEC', value: '52 kWh/kg' },
+    ],
+    sparkline: [1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.65, 1.6, 1.55, 1.5, 1.6, 1.65, 1.6, 1.55, 1.6, 1.65],
+    events: [
+      { ts: '02:14', text: 'Online · ramp to 1.6 MW', kind: 'ok' },
+    ],
+  },
+  {
+    id: 'CO2C-01',
+    code: 'CO2C',
+    name: 'CO2C-01',
+    description: 'Direct-capture · 50 kg/h CO₂',
+    position: { x: 768, y: 558 },
+    side: 'load',
+    status: 'ok',
+    flow: { value: 0.18, label: '0.18 MW' },
+    pillLong: '● CAPTURING',
+    pillShort: '● CAP',
+    pillKind: 'ok',
+    tags: [
+      { key: 'TYPE', value: 'Amine DAC' },
+      { key: 'CAPTURE', value: '50 kg/h CO₂' },
+      { key: 'POWER', value: '0.18 MW' },
+      { key: 'TODAY', value: '1.20 t' },
+    ],
+    readouts: [
+      { label: 'POWER', value: '0.18 MW' },
+      { label: 'CAPTURE', value: '50 kg/h' },
+      { label: 'TOTAL', value: '1.20 t' },
+    ],
+    sparkline: [0.16, 0.17, 0.18, 0.18, 0.19, 0.18, 0.18, 0.17, 0.18, 0.19, 0.18, 0.17, 0.18, 0.18, 0.19, 0.18],
+    events: [
+      { ts: '02:14', text: 'Capture cycle steady-state', kind: 'ok' },
+    ],
+  },
 ];
 
 export const LOADS: Asset[] = [
@@ -342,7 +466,7 @@ export const LOADS: Asset[] = [
   },
 ];
 
-export const ALL_ASSETS: Asset[] = [UTILITY, ...SOURCES, ...LOADS];
+export const ALL_ASSETS: Asset[] = [UTILITY, ...SOURCES, ...LOADS, ...H2_STACK];
 
 // Live-Operations asset list (compact)
 export interface OpsAssetRow {

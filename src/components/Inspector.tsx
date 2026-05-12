@@ -1,21 +1,97 @@
+import { useState } from 'react';
 import { Area, AreaChart, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { useTheme } from '@/lib/theme';
 import { Button } from './Button';
 import { Pill } from './Pill';
 import { DISPATCH_4H } from '@/data/timeseries';
 import type { Asset } from '@/data/assets';
+import { useBuilder } from '@/lib/builder-store';
 
 function kindPillColor(kind: 'ok' | 'warn' | 'err' | 'idle') {
   if (kind === 'idle') return 'idle' as const;
   return kind;
 }
 
-export function Inspector({ asset }: { asset: Asset }) {
+function EditableValue({
+  value,
+  editing,
+  onCommit,
+  className,
+  style,
+  type = 'text',
+}: {
+  value: string;
+  editing: boolean;
+  onCommit: (v: string) => void;
+  className?: string;
+  style?: React.CSSProperties;
+  type?: 'text' | 'number';
+}) {
+  const [local, setLocal] = useState(value);
+  // re-sync if external value changes (e.g. SOC slider, simulate, scenario load)
+  if (!editing && local !== value) {
+    // updating during render is ok since we use it to mirror prop
+    setLocal(value);
+  }
+  if (!editing) {
+    return (
+      <span className={className} style={style} data-num>
+        {value}
+      </span>
+    );
+  }
+  return (
+    <input
+      value={local}
+      type={type}
+      onChange={(e) => setLocal(e.target.value)}
+      onBlur={() => {
+        if (local !== value) onCommit(local);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          (e.currentTarget as HTMLInputElement).blur();
+        } else if (e.key === 'Escape') {
+          setLocal(value);
+          (e.currentTarget as HTMLInputElement).blur();
+        }
+      }}
+      className={className}
+      style={{
+        background: 'var(--sub)',
+        color: 'var(--fg)',
+        border: '1px solid var(--accent)',
+        outline: 'none',
+        padding: '0 4px',
+        width: '100%',
+        ...style,
+      }}
+      data-num
+    />
+  );
+}
+
+export function Inspector({ asset: assetProp }: { asset?: Asset }) {
   const { theme, mode } = useTheme();
   const isInstrument = theme === 'instrument';
-  const radius = isInstrument ? 2 : 8;
+  const { state, dispatch } = useBuilder();
+  // Prefer store-driven selection; fall back to prop for backwards compat
+  const fromStore = state.nodes.find((n) => n.id === state.selectedId) ?? null;
+  const asset = fromStore ?? assetProp ?? state.nodes[0];
+  if (!asset) return null;
 
+  const editing = state.editingId === asset.id;
+  const radius = isInstrument ? 2 : 8;
   const sparkData = (asset.sparkline ?? DISPATCH_4H).map((v, i) => ({ i, v }));
+
+  const toggleEdit = () => {
+    dispatch({ type: 'SET_EDITING', id: editing ? null : asset.id });
+  };
+
+  const dispatchSimulate = () => {
+    if (editing) dispatch({ type: 'SET_EDITING', id: null });
+    dispatch({ type: 'SET_SIMULATING', on: true });
+  };
 
   return (
     <aside
@@ -30,17 +106,19 @@ export function Inspector({ asset }: { asset: Asset }) {
           {isInstrument ? 'INSPECTOR · TAG' : 'INSPECTOR'}
         </div>
         <div className="flex items-center justify-between gap-2">
-          <div
+          <EditableValue
+            value={asset.name}
+            editing={editing}
+            onCommit={(v) => dispatch({ type: 'UPDATE_NAME', id: asset.id, name: v })}
             className="text-[var(--fg)]"
             style={{
               fontSize: 15,
               fontWeight: 600,
               fontFamily: isInstrument ? 'var(--font-mono)' : 'var(--font-sans)',
               letterSpacing: isInstrument ? '0' : '-0.01em',
+              flex: 1,
             }}
-          >
-            {asset.name}
-          </div>
+          />
           <Pill kind={kindPillColor(asset.pillKind)}>
             {isInstrument ? asset.pillShort : asset.pillLong}
           </Pill>
@@ -53,10 +131,13 @@ export function Inspector({ asset }: { asset: Asset }) {
       {/* Tag table */}
       <div className="border-b" style={{ borderColor: 'var(--line)' }}>
         <div
-          className="px-4 py-2 font-mono uppercase text-[var(--fg-3)]"
+          className="px-4 py-2 font-mono uppercase text-[var(--fg-3)] flex items-center justify-between"
           style={{ fontSize: 10, letterSpacing: '0.12em', background: 'var(--sub)' }}
         >
-          TAG VALUES
+          <span>TAG VALUES</span>
+          {editing && (
+            <span style={{ color: 'var(--accent)' }}>EDITING</span>
+          )}
         </div>
         <div>
           {asset.tags.map((t, i) => (
@@ -74,13 +155,15 @@ export function Inspector({ asset }: { asset: Asset }) {
               >
                 {t.key}
               </span>
-              <span
+              <EditableValue
+                value={t.value}
+                editing={editing}
+                onCommit={(v) =>
+                  dispatch({ type: 'UPDATE_TAG', id: asset.id, key: t.key, value: v })
+                }
                 className="font-mono tabular-nums text-[var(--fg)]"
                 style={{ fontSize: 11 }}
-                data-num
-              >
-                {t.value}
-              </span>
+              />
             </div>
           ))}
         </div>
@@ -103,8 +186,13 @@ export function Inspector({ asset }: { asset: Asset }) {
               >
                 {r.label}
               </div>
-              <div
-                className="tabular-nums mt-0.5"
+              <EditableValue
+                value={r.value}
+                editing={editing}
+                onCommit={(v) =>
+                  dispatch({ type: 'UPDATE_READOUT', id: asset.id, label: r.label, value: v })
+                }
+                className="tabular-nums mt-0.5 block"
                 style={{
                   fontSize: 15,
                   fontWeight: 600,
@@ -120,10 +208,7 @@ export function Inspector({ asset }: { asset: Asset }) {
                             ? 'var(--accent)'
                             : 'var(--fg)',
                 }}
-                data-num
-              >
-                {r.value}
-              </div>
+              />
             </div>
           ))}
         </div>
@@ -141,9 +226,22 @@ export function Inspector({ asset }: { asset: Asset }) {
               {asset.soc.value.toFixed(1)}% · TARGET {asset.soc.target}%
             </span>
           </div>
+          {/* Slider */}
+          <input
+            type="range"
+            min={0}
+            max={100}
+            step={0.1}
+            value={asset.soc.value}
+            onChange={(e) =>
+              dispatch({ type: 'SET_SOC', id: asset.id, value: parseFloat(e.target.value) })
+            }
+            className="hydrel-soc"
+            style={{ width: '100%', accentColor: isInstrument ? 'var(--fg)' : 'var(--ok)' }}
+          />
           {isInstrument ? (
             <div
-              className="border relative"
+              className="border relative mt-1"
               style={{ borderColor: 'var(--line)', height: 16, background: 'var(--sub)' }}
             >
               <div
@@ -172,7 +270,7 @@ export function Inspector({ asset }: { asset: Asset }) {
             </div>
           ) : (
             <div
-              className="relative h-1.5 rounded-full"
+              className="relative h-1.5 rounded-full mt-1"
               style={{ background: 'var(--sub)' }}
             >
               <div
@@ -193,7 +291,9 @@ export function Inspector({ asset }: { asset: Asset }) {
             className="font-mono text-[var(--fg-3)] mt-2"
             style={{ fontSize: 10, letterSpacing: '0.08em' }}
           >
-            {isInstrument ? 'TARGET 70% · WINDOW 02:30-06:00' : '0% — Target 70% — 100%'}
+            {isInstrument
+              ? `TARGET ${asset.soc.target}% · DRAG SLIDER TO SET`
+              : `Target ${asset.soc.target}% — drag slider to set dispatch`}
           </div>
         </div>
       )}
@@ -304,10 +404,10 @@ export function Inspector({ asset }: { asset: Asset }) {
         className="p-4 border-t flex gap-2"
         style={{ borderColor: 'var(--line)', background: 'var(--sub)' }}
       >
-        <Button variant="ghost" className="flex-1">
-          {isInstrument ? 'EDIT' : 'Edit asset'}
+        <Button variant={editing ? 'danger' : 'ghost'} className="flex-1" onClick={toggleEdit}>
+          {editing ? (isInstrument ? 'DONE' : 'Done') : isInstrument ? 'EDIT' : 'Edit asset'}
         </Button>
-        <Button variant="primary" className="flex-1">
+        <Button variant="primary" className="flex-1" onClick={dispatchSimulate}>
           {isInstrument ? 'DISPATCH ↑' : 'Dispatch ↑'}
         </Button>
       </div>

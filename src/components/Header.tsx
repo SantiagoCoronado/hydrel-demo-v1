@@ -1,10 +1,37 @@
-import { useTheme } from '@/lib/theme';
+import { Sun, Moon } from 'lucide-react';
+import { useTheme, useThemeControls } from '@/lib/theme';
 import { Wordmark } from './Wordmark';
 import { Pill } from './Pill';
 import { Clock } from './Clock';
 
 const HELIOS_TABS = ['Baseline', '+ BESS-02', 'High-DR'];
 const FN_TABS = ['F1·SLD', 'F2·MAP', 'F3·SIM', 'F4·HIST', 'F5·ALARMS'];
+
+function ThemeToggle() {
+  const { theme, mode } = useTheme();
+  const { toggleMode } = useThemeControls();
+  const isInstrument = theme === 'instrument';
+  const isDark = mode === 'dark';
+  const Icon = isDark ? Sun : Moon;
+  return (
+    <button
+      onClick={toggleMode}
+      title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      className="inline-flex items-center justify-center cursor-pointer"
+      style={{
+        width: 28,
+        height: 28,
+        background: 'transparent',
+        color: 'var(--fg-2)',
+        border: isInstrument ? '1px solid var(--line)' : 'none',
+        borderRadius: isInstrument ? 2 : 6,
+      }}
+    >
+      <Icon size={15} strokeWidth={1.8} />
+    </button>
+  );
+}
 
 export function Header() {
   const { theme } = useTheme();
@@ -37,6 +64,7 @@ export function Header() {
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-3 font-mono text-[11px] text-[var(--fg-3)]">
+          <ThemeToggle />
           <span
             className="inline-block w-1.5 h-1.5 rounded-full"
             style={{ background: 'var(--ok)' }}
@@ -81,6 +109,7 @@ export function Header() {
         ))}
       </nav>
       <div className="ml-auto flex items-center gap-3">
+        <ThemeToggle />
         <Pill kind="ok">
           SYNCED · <Clock />
         </Pill>

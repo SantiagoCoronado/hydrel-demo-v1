@@ -2,11 +2,20 @@ import { useState } from 'react';
 import { Search } from 'lucide-react';
 import { useTheme } from '@/lib/theme';
 import { PALETTE } from '@/data/assets';
+import type { AssetKind } from '@/data/assets';
+
+const DRAG_MIME = 'application/x-hydrel-asset';
 
 export function Palette() {
   const { theme } = useTheme();
   const isInstrument = theme === 'instrument';
   const [q, setQ] = useState('');
+
+  const onDragStart = (e: React.DragEvent<HTMLDivElement>, code: AssetKind) => {
+    e.dataTransfer.effectAllowed = 'copy';
+    e.dataTransfer.setData(DRAG_MIME, code);
+    e.dataTransfer.setData('text/plain', code);
+  };
 
   return (
     <aside
@@ -34,6 +43,12 @@ export function Palette() {
               letterSpacing: isInstrument ? '0.06em' : 0,
             }}
           />
+        </div>
+        <div
+          className="font-mono uppercase text-[var(--fg-3)] mt-2 px-1"
+          style={{ fontSize: 9, letterSpacing: '0.12em' }}
+        >
+          {isInstrument ? '↳ DRAG TO CANVAS' : 'Drag onto canvas →'}
         </div>
       </div>
 
@@ -64,7 +79,9 @@ export function Palette() {
                   return (
                     <div
                       key={it.code + it.label}
-                      className="grid items-center border-b cursor-grab"
+                      draggable
+                      onDragStart={(e) => onDragStart(e, it.code)}
+                      className="grid items-center border-b cursor-grab active:cursor-grabbing select-none hover:bg-[var(--sub)]"
                       style={{
                         gridTemplateColumns: '46px 1fr',
                         borderColor: 'var(--line)',
@@ -96,7 +113,9 @@ export function Palette() {
                 return (
                   <div
                     key={it.code + it.label}
-                    className="flex items-center gap-2 px-2.5 py-2 cursor-grab"
+                    draggable
+                    onDragStart={(e) => onDragStart(e, it.code)}
+                    className="flex items-center gap-2 px-2.5 py-2 cursor-grab active:cursor-grabbing select-none hover:bg-[var(--sub)]"
                     style={{
                       background: highlight ? 'color-mix(in oklch, var(--accent) 12%, transparent)' : 'transparent',
                       borderLeft: highlight ? '2px solid var(--accent)' : '2px solid transparent',
@@ -131,3 +150,5 @@ export function Palette() {
     </aside>
   );
 }
+
+export const PALETTE_DRAG_MIME = DRAG_MIME;
